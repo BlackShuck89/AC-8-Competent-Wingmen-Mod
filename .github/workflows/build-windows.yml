@@ -1,0 +1,47 @@
+name: Build Windows Wingman Planner
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/**"
+      - "include/**"
+      - "tests/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/build-windows.yml"
+
+jobs:
+  compile-and-test:
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Configure x64 Release build
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Compile planner DLL and tests
+        run: cmake --build build --config Release --parallel
+
+      - name: Run native planner unit tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Package Windows DLL (library only; NOT installable game mod)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path @(
+            'build/Release/AC8RoleWingmen.dll',
+            'wingmen.ini',
+            'README.md',
+            'LICENSE'
+          ) -DestinationPath 'dist/AC8_Role_Wingmen_Win64_Library_ONLY.zip' -Force
+
+      - name: Make library available for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: AC8-Win64-Compiled-Library-NOT-Playable-Mod
+          path: dist/AC8_Role_Wingmen_Win64_Library_ONLY.zip
+          if-no-files-found: error
