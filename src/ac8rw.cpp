@@ -225,8 +225,8 @@ int AC8RW_Plan(AC8RW_State *state, const AC8RW_Config *cfg,
         if (!std::isfinite(best_score)) best = nullptr;
         uint32_t reason = launch_reason(w, best, p, role, state, now);
         out[i] = {w.id, best ? best->id : 0, role,
-            role == AC8RW_FIGHTER ? AC8RW_INTERCEPT : role == AC8RW_ATTACKER ? AC8RW_STRIKE :
-            role == AC8RW_ELECTRONIC_WARFARE ? AC8RW_PROTECT : AC8RW_FLEX,
+            static_cast<uint32_t>(role == AC8RW_FIGHTER ? AC8RW_INTERCEPT : role == AC8RW_ATTACKER ? AC8RW_STRIKE :
+            role == AC8RW_ELECTRONIC_WARFARE ? AC8RW_PROTECT : AC8RW_FLEX),
             reason, best ? 1u : 0u, reason == AC8RW_FIRE ? 1u : 0u, best_score};
         if (best) {
             state->previous_targets[w.id] = best->id;
